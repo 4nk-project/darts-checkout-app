@@ -1,0 +1,4 @@
+#Tue May 26 18:18:19 JST 2026
+base.0=/Users/4nk/Documents/darts-checkout/app/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/0/classes.dex
+path.0=0/classes.dex
+renamed.0=classes.dex
