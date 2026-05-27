@@ -31,10 +31,11 @@ a {
 
 .app {
   min-height: 100svh;
-  padding: max(28px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+  height: 100svh;
+  padding: max(20px, env(safe-area-inset-top)) clamp(12px, 3vw, 24px) max(12px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-rows: auto auto 1fr;
-  gap: 8px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: clamp(8px, 1.4svh, 14px);
   position: relative;
   overflow: hidden;
 }
@@ -106,20 +107,23 @@ a {
 
 .score-panel {
   display: grid;
-  gap: 6px;
+  gap: clamp(6px, 1svh, 10px);
+  width: min(100%, 390px);
+  margin-inline: auto;
   text-align: center;
 }
 
 .target {
-  font-size: clamp(46px, 13vw, 68px);
+  font-size: clamp(44px, 12vw, 72px);
   line-height: 0.96;
   font-weight: 900;
   letter-spacing: 0;
 }
 
 .remaining {
-  font-size: 18px;
+  font-size: clamp(16px, 4.2vw, 18px);
   color: var(--muted);
+  line-height: 1.2;
 }
 
 .difficulty-label {
@@ -129,7 +133,7 @@ a {
 }
 
 .throws {
-  height: 42px;
+  min-height: 38px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -145,12 +149,14 @@ a {
 }
 
 .message {
-  min-height: 28px;
+  min-height: 30px;
   display: grid;
   place-items: center;
   color: var(--muted);
   font-weight: 800;
   font-size: 15px;
+  line-height: 1.35;
+  padding-inline: 4px;
 }
 
 .message.correct {
@@ -201,16 +207,16 @@ a {
   min-height: 0;
   display: grid;
   place-items: center;
+  padding-block: clamp(6px, 1.6svh, 14px);
   overflow: hidden;
 }
 
 #dartboard {
   display: block;
-  width: min(100%, 100svh - 320px);
-  max-width: 760px;
+  width: min(100%, 46svh, 460px);
+  height: auto;
+  max-height: 100%;
   aspect-ratio: 1;
-  min-width: 300px;
-  min-height: 300px;
   touch-action: manipulation;
 }
 
@@ -289,8 +295,8 @@ dialog::backdrop {
 @media (min-width: 860px) and (orientation: landscape) {
   .app {
     grid-template-columns: minmax(280px, 360px) 1fr;
-    grid-template-rows: auto 1fr;
-    column-gap: 18px;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: clamp(18px, 4vw, 56px);
   }
 
   .topbar {
@@ -298,6 +304,8 @@ dialog::backdrop {
   }
 
   .score-panel {
+    width: 100%;
+    margin-inline: 0;
     align-self: start;
   }
 
@@ -307,14 +315,13 @@ dialog::backdrop {
   }
 
   #dartboard {
-    width: min(100%, calc(100svh - 90px));
-    max-width: none;
+    width: min(100%, 74svh, 560px);
   }
 }
 
 @media (max-height: 760px) and (orientation: portrait) {
   .app {
-    padding-top: max(24px, env(safe-area-inset-top));
+    padding-top: max(16px, env(safe-area-inset-top));
     gap: 6px;
   }
 
@@ -328,21 +335,40 @@ dialog::backdrop {
   }
 
   .target {
-    font-size: 44px;
+    font-size: 42px;
   }
 
   .throws {
-    height: 38px;
+    min-height: 36px;
   }
 
   .secondary,
   .primary {
-    height: 42px;
+    height: 40px;
+  }
+}
+
+@media (max-height: 620px) and (orientation: portrait) {
+  .target {
+    font-size: 38px;
   }
 
-  #dartboard {
-    width: min(100%, 100svh - 284px);
-    min-width: 270px;
-    min-height: 270px;
+  .remaining,
+  .difficulty-label {
+    display: inline;
+  }
+
+  .message {
+    min-height: 24px;
+    font-size: 14px;
+  }
+
+  .throws {
+    min-height: 34px;
+  }
+
+  .secondary,
+  .primary {
+    height: 38px;
   }
 }
