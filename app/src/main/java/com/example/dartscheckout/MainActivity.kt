@@ -1,6 +1,8 @@
 package com.example.dartscheckout
 
+import android.content.Context
 import android.graphics.Paint
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
@@ -9,6 +11,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -37,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,13 +55,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -64,7 +75,10 @@ import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.sin
 import kotlin.random.Random
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,6 +135,7 @@ private enum class MenuDialog {
     About,
     CheckoutTable,
     Difficulty,
+    BoardColors,
     Stats,
     Privacy,
     Licenses,
@@ -144,6 +159,26 @@ private data class PracticeStats(
         get() = if (attempts == 0) 0 else (correct * 100 / attempts)
 }
 
+private data class AppUpdateInfo(
+    val versionCode: Long,
+    val versionName: String,
+    val apkUrl: String,
+    val releaseNotesUrl: String?,
+    val message: String,
+    val forceUpdate: Boolean,
+)
+
+private data class BoardColors(
+    val lightSegment: Color,
+    val ringPrimary: Color,
+    val ringSecondary: Color,
+)
+
+private data class ColorOption(
+    val label: String,
+    val color: Color,
+)
+
 private enum class ThrowType(
     val shortLabel: String,
     val displayName: String,
@@ -158,6 +193,27 @@ private enum class ThrowType(
 private val boardNumbers = listOf(
     20, 1, 18, 4, 13, 6, 10, 15, 2, 17,
     3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
+)
+
+private val defaultBoardColors = BoardColors(
+    lightSegment = Color(0xFFF1DDC7),
+    ringPrimary = Color(0xFF1D8B4C),
+    ringSecondary = Color(0xFFC73B32),
+)
+
+private val boardColorOptions = listOf(
+    ColorOption("クリーム", Color(0xFFF1DDC7)),
+    ColorOption("ホワイト", Color(0xFFF7F2EA)),
+    ColorOption("イエロー", Color(0xFFF2C94C)),
+    ColorOption("オレンジ", Color(0xFFE47B35)),
+    ColorOption("レッド", Color(0xFFC73B32)),
+    ColorOption("ピンク", Color(0xFFD95C8A)),
+    ColorOption("パープル", Color(0xFF7B61FF)),
+    ColorOption("ブルー", Color(0xFF2D7FF9)),
+    ColorOption("シアン", Color(0xFF22A6B3)),
+    ColorOption("グリーン", Color(0xFF1D8B4C)),
+    ColorOption("ライム", Color(0xFF8ABF3F)),
+    ColorOption("グレー", Color(0xFF6F665D)),
 )
 
 private val allThrows: List<DartThrow> = buildList {
@@ -180,6 +236,11 @@ private val finishableScores: List<Int> = (2..180).filter { target ->
 }
 
 private const val contactMailUri = "mailto:contact@ankoromoti.com?subject=Darts%20Checkout%20Feedback"
+private const val updateInfoUrl = "https://github.com/4nk-project/darts-checkout-app/releases/latest/download/latest.json"
+private const val preferencesName = "darts_checkout_preferences"
+private const val lightSegmentColorKey = "board_light_segment_color"
+private const val ringPrimaryColorKey = "board_ring_primary_color"
+private const val ringSecondaryColorKey = "board_ring_secondary_color"
 
 private val checkoutArrangements = listOf(
     180 to "T20 / T20 / T20",
@@ -237,6 +298,62 @@ private fun recommendedRoute(target: Int): String {
     return "アレンジが見つかりません"
 }
 
+private fun loadBoardColors(context: Context): BoardColors {
+    val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+    return BoardColors(
+        lightSegment = Color(preferences.getInt(lightSegmentColorKey, defaultBoardColors.lightSegment.toArgb())),
+        ringPrimary = Color(preferences.getInt(ringPrimaryColorKey, defaultBoardColors.ringPrimary.toArgb())),
+        ringSecondary = Color(preferences.getInt(ringSecondaryColorKey, defaultBoardColors.ringSecondary.toArgb())),
+    )
+}
+
+private fun saveBoardColors(context: Context, boardColors: BoardColors) {
+    context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        .edit()
+        .putInt(lightSegmentColorKey, boardColors.lightSegment.toArgb())
+        .putInt(ringPrimaryColorKey, boardColors.ringPrimary.toArgb())
+        .putInt(ringSecondaryColorKey, boardColors.ringSecondary.toArgb())
+        .apply()
+}
+
+private suspend fun checkForAppUpdate(context: Context): AppUpdateInfo? = withContext(Dispatchers.IO) {
+    runCatching {
+        val connection = (URL(updateInfoUrl).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 5000
+            readTimeout = 5000
+            requestMethod = "GET"
+        }
+        try {
+            if (connection.responseCode !in 200..299) return@runCatching null
+
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(response)
+            val updateInfo = AppUpdateInfo(
+                versionCode = json.getLong("versionCode"),
+                versionName = json.optString("versionName", ""),
+                apkUrl = json.getString("apkUrl"),
+                releaseNotesUrl = json.optString("releaseNotesUrl").takeIf { it.isNotBlank() },
+                message = json.optString("message", "新しいバージョンがあります。"),
+                forceUpdate = json.optBoolean("forceUpdate", false),
+            )
+
+            updateInfo.takeIf { it.versionCode > currentAppVersionCode(context) }
+        } finally {
+            connection.disconnect()
+        }
+    }.getOrNull()
+}
+
+private fun currentAppVersionCode(context: Context): Long {
+    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode
+    } else {
+        @Suppress("DEPRECATION")
+        packageInfo.versionCode.toLong()
+    }
+}
+
 @Composable
 private fun DartsCheckoutApp() {
     MaterialTheme {
@@ -251,6 +368,7 @@ private fun DartsCheckoutApp() {
 
 @Composable
 private fun CheckoutPracticeScreen() {
+    val context = LocalContext.current
     var difficulty by remember { mutableStateOf(Difficulty.All) }
     var target by remember { mutableStateOf(nextTarget(difficulty)) }
     var throws by remember { mutableStateOf(emptyList<DartThrow>()) }
@@ -259,7 +377,13 @@ private fun CheckoutPracticeScreen() {
     var activeDialog by remember { mutableStateOf<MenuDialog?>(null) }
     var answerVisible by remember { mutableStateOf(false) }
     var stats by remember { mutableStateOf(PracticeStats()) }
+    var boardColors by remember { mutableStateOf(loadBoardColors(context)) }
+    var availableUpdate by remember { mutableStateOf<AppUpdateInfo?>(null) }
     val uriHandler = LocalUriHandler.current
+
+    LaunchedEffect(Unit) {
+        availableUpdate = checkForAppUpdate(context.applicationContext)
+    }
 
     val total = throws.sumOf { it.points }
     val remaining = target - total
@@ -304,6 +428,10 @@ private fun CheckoutPracticeScreen() {
                 onDifficulty = {
                     menuExpanded = false
                     activeDialog = MenuDialog.Difficulty
+                },
+                onBoardColors = {
+                    menuExpanded = false
+                    activeDialog = MenuDialog.BoardColors
                 },
                 onStats = {
                     menuExpanded = false
@@ -363,6 +491,7 @@ private fun CheckoutPracticeScreen() {
                 DartBoard(
                     modifier = Modifier.size(boardSize),
                     enabled = enabled,
+                    boardColors = boardColors,
                     onThrow = submitThrow,
                 )
             }
@@ -373,6 +502,7 @@ private fun CheckoutPracticeScreen() {
         AppInfoDialog(
             dialog = dialog,
             difficulty = difficulty,
+            boardColors = boardColors,
             stats = stats,
             onDifficultySelected = { selected ->
                 difficulty = selected
@@ -382,6 +512,10 @@ private fun CheckoutPracticeScreen() {
                 answerVisible = false
                 activeDialog = null
             },
+            onBoardColorsChanged = { colors ->
+                boardColors = colors
+                saveBoardColors(context, colors)
+            },
             onResetStats = {
                 stats = PracticeStats()
                 activeDialog = null
@@ -389,6 +523,74 @@ private fun CheckoutPracticeScreen() {
             onDismiss = { activeDialog = null },
         )
     }
+
+    availableUpdate?.let { updateInfo ->
+        AppUpdateDialog(
+            updateInfo = updateInfo,
+            onUpdate = {
+                uriHandler.openUri(updateInfo.apkUrl)
+                if (!updateInfo.forceUpdate) {
+                    availableUpdate = null
+                }
+            },
+            onReleaseNotes = {
+                updateInfo.releaseNotesUrl?.let(uriHandler::openUri)
+            },
+            onDismiss = {
+                if (!updateInfo.forceUpdate) {
+                    availableUpdate = null
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun AppUpdateDialog(
+    updateInfo: AppUpdateInfo,
+    onUpdate: () -> Unit,
+    onReleaseNotes: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onUpdate) {
+                Text("更新する")
+            }
+        },
+        dismissButton = {
+            Row {
+                if (updateInfo.releaseNotesUrl != null) {
+                    TextButton(onClick = onReleaseNotes) {
+                        Text("詳細")
+                    }
+                }
+                if (!updateInfo.forceUpdate) {
+                    TextButton(onClick = onDismiss) {
+                        Text("あとで")
+                    }
+                }
+            }
+        },
+        title = {
+            Text(
+                text = if (updateInfo.versionName.isBlank()) {
+                    "アップデートがあります"
+                } else {
+                    "アップデート ${updateInfo.versionName}"
+                },
+            )
+        },
+        text = {
+            Text(
+                text = updateInfo.message,
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
+                color = Color(0xFF18201B),
+            )
+        },
+    )
 }
 
 @Composable
@@ -398,6 +600,7 @@ private fun AppTopBar(
     onAbout: () -> Unit,
     onCheckoutTable: () -> Unit,
     onDifficulty: () -> Unit,
+    onBoardColors: () -> Unit,
     onStats: () -> Unit,
     onPrivacy: () -> Unit,
     onLicenses: () -> Unit,
@@ -439,6 +642,10 @@ private fun AppTopBar(
                     onClick = onDifficulty,
                 )
                 DropdownMenuItem(
+                    text = { Text("盤面カラー設定") },
+                    onClick = onBoardColors,
+                )
+                DropdownMenuItem(
                     text = { Text("成績を見る") },
                     onClick = onStats,
                 )
@@ -472,8 +679,10 @@ private fun AppTopBar(
 private fun AppInfoDialog(
     dialog: MenuDialog,
     difficulty: Difficulty,
+    boardColors: BoardColors,
     stats: PracticeStats,
     onDifficultySelected: (Difficulty) -> Unit,
+    onBoardColorsChanged: (BoardColors) -> Unit,
     onResetStats: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -490,6 +699,7 @@ private fun AppInfoDialog(
                     MenuDialog.About -> "このアプリについて"
                     MenuDialog.CheckoutTable -> "ダーツのアレンジ表"
                     MenuDialog.Difficulty -> "難易度を選択"
+                    MenuDialog.BoardColors -> "盤面カラー設定"
                     MenuDialog.Stats -> "成績"
                     MenuDialog.Privacy -> "プライバシー"
                     MenuDialog.Licenses -> "ライセンス"
@@ -503,6 +713,10 @@ private fun AppInfoDialog(
                 MenuDialog.Difficulty -> DifficultySelector(
                     selected = difficulty,
                     onSelected = onDifficultySelected,
+                )
+                MenuDialog.BoardColors -> BoardColorSettings(
+                    boardColors = boardColors,
+                    onBoardColorsChanged = onBoardColorsChanged,
                 )
                 MenuDialog.Stats -> StatsText(
                     stats = stats,
@@ -541,6 +755,117 @@ private fun DifficultySelector(
             }
         }
     }
+}
+
+@Composable
+private fun BoardColorSettings(
+    boardColors: BoardColors,
+    onBoardColorsChanged: (BoardColors) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        BoardColorPickerRow(
+            label = "シングル白エリア",
+            selectedColor = boardColors.lightSegment,
+            onColorSelected = { color ->
+                onBoardColorsChanged(boardColors.copy(lightSegment = color))
+            },
+        )
+        BoardColorPickerRow(
+            label = "リングカラー 1",
+            selectedColor = boardColors.ringPrimary,
+            onColorSelected = { color ->
+                onBoardColorsChanged(boardColors.copy(ringPrimary = color))
+            },
+        )
+        BoardColorPickerRow(
+            label = "リングカラー 2",
+            selectedColor = boardColors.ringSecondary,
+            onColorSelected = { color ->
+                onBoardColorsChanged(boardColors.copy(ringSecondary = color))
+            },
+        )
+        SecondaryButton(
+            text = "標準カラーに戻す",
+            modifier = Modifier.fillMaxWidth(),
+            enabled = boardColors != defaultBoardColors,
+        ) {
+            onBoardColorsChanged(defaultBoardColors)
+        }
+    }
+}
+
+@Composable
+private fun BoardColorPickerRow(
+    label: String,
+    selectedColor: Color,
+    onColorSelected: (Color) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ColorSwatch(
+                color = selectedColor,
+                selected = true,
+                size = 34.dp,
+                onClick = {},
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = label,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF18201B),
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            boardColorOptions.chunked(6).forEach { rowColors ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    rowColors.forEach { option ->
+                        ColorSwatch(
+                            color = option.color,
+                            selected = selectedColor == option.color,
+                            contentDescription = option.label,
+                            onClick = { onColorSelected(option.color) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColorSwatch(
+    color: Color,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    size: Dp = 32.dp,
+    contentDescription: String? = null,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(color, CircleShape)
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) Color(0xFF18201B) else Color(0xFFE5DED4),
+                shape = CircleShape,
+            )
+            .then(
+                if (contentDescription == null) {
+                    Modifier
+                } else {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                },
+            )
+            .clickable(onClick = onClick),
+    )
 }
 
 @Composable
@@ -981,6 +1306,7 @@ private fun SecondaryButton(
 private fun DartBoard(
     modifier: Modifier = Modifier,
     enabled: Boolean,
+    boardColors: BoardColors,
     onThrow: (DartThrow) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -1007,11 +1333,19 @@ private fun DartBoard(
                 }
             },
     ) {
-        drawBoard(highlight = highlight, highlightAlpha = highlightAlpha.value)
+        drawBoard(
+            boardColors = boardColors,
+            highlight = highlight,
+            highlightAlpha = highlightAlpha.value,
+        )
     }
 }
 
-private fun DrawScope.drawBoard(highlight: HitHighlight?, highlightAlpha: Float) {
+private fun DrawScope.drawBoard(
+    boardColors: BoardColors,
+    highlight: HitHighlight?,
+    highlightAlpha: Float,
+) {
     val boardSize = minOf(size.width, size.height)
     val center = Offset(size.width / 2f, size.height / 2f)
     val radius = boardSize / 2f * 0.96f
@@ -1023,14 +1357,42 @@ private fun DrawScope.drawBoard(highlight: HitHighlight?, highlightAlpha: Float)
         val start = index * 18f - 99f
         val sweep = 18f
         val dark = index % 2 == 0
-        drawRingSector(center, scoringRadius * 0.12f, scoringRadius * 0.49f, start, sweep, if (dark) Color(0xFF1F1E1A) else Color(0xFFF1DDC7))
-        drawRingSector(center, scoringRadius * 0.50f, scoringRadius * 0.58f, start, sweep, if (dark) Color(0xFF1D8B4C) else Color(0xFFC73B32))
-        drawRingSector(center, scoringRadius * 0.59f, scoringRadius * 0.85f, start, sweep, if (dark) Color(0xFF1F1E1A) else Color(0xFFF1DDC7))
-        drawRingSector(center, scoringRadius * 0.86f, scoringRadius * 0.98f, start, sweep, if (dark) Color(0xFF1D8B4C) else Color(0xFFC73B32))
+        drawRingSector(
+            center,
+            scoringRadius * 0.12f,
+            scoringRadius * 0.49f,
+            start,
+            sweep,
+            if (dark) Color(0xFF1F1E1A) else boardColors.lightSegment,
+        )
+        drawRingSector(
+            center,
+            scoringRadius * 0.50f,
+            scoringRadius * 0.58f,
+            start,
+            sweep,
+            if (dark) boardColors.ringPrimary else boardColors.ringSecondary,
+        )
+        drawRingSector(
+            center,
+            scoringRadius * 0.59f,
+            scoringRadius * 0.85f,
+            start,
+            sweep,
+            if (dark) Color(0xFF1F1E1A) else boardColors.lightSegment,
+        )
+        drawRingSector(
+            center,
+            scoringRadius * 0.86f,
+            scoringRadius * 0.98f,
+            start,
+            sweep,
+            if (dark) boardColors.ringPrimary else boardColors.ringSecondary,
+        )
     }
 
-    drawCircle(Color(0xFF1D8B4C), scoringRadius * 0.11f, center)
-    drawCircle(Color(0xFFC73B32), scoringRadius * 0.05f, center)
+    drawCircle(boardColors.ringPrimary, scoringRadius * 0.11f, center)
+    drawCircle(boardColors.ringSecondary, scoringRadius * 0.05f, center)
     drawHitHighlight(center, scoringRadius, highlight, highlightAlpha)
     drawCircle(Color(0xFFEFE8DD), scoringRadius * 0.98f, center, style = Stroke(width = 2.dp.toPx()))
     drawBoardNumbers(center, radius)

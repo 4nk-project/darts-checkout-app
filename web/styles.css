@@ -279,6 +279,54 @@ dialog::backdrop {
   gap: 8px;
 }
 
+.color-settings {
+  display: grid;
+  gap: 16px;
+}
+
+.color-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.color-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+}
+
+.color-current,
+.color-swatch {
+  background: var(--swatch);
+}
+
+.color-current {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+}
+
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--disabled);
+  border-radius: 999px;
+  padding: 0;
+}
+
+.color-swatch.selected {
+  border: 3px solid var(--ink);
+}
+
 .option-button {
   width: 100%;
   background: var(--bg);
