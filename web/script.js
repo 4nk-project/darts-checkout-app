@@ -19,6 +19,27 @@ const difficulties = {
   all: { label: "全範囲", min: 2, max: 180 },
 };
 
+const defaultBoardColors = {
+  lightSegment: "#f1ddc7",
+  ringPrimary: "#1d8b4c",
+  ringSecondary: "#c73b32",
+};
+
+const boardColorOptions = [
+  { label: "クリーム", color: "#f1ddc7" },
+  { label: "ホワイト", color: "#f7f2ea" },
+  { label: "イエロー", color: "#f2c94c" },
+  { label: "オレンジ", color: "#e47b35" },
+  { label: "レッド", color: "#c73b32" },
+  { label: "ピンク", color: "#d95c8a" },
+  { label: "パープル", color: "#7b61ff" },
+  { label: "ブルー", color: "#2d7ff9" },
+  { label: "シアン", color: "#22a6b3" },
+  { label: "グリーン", color: "#1d8b4c" },
+  { label: "ライム", color: "#8abf3f" },
+  { label: "グレー", color: "#6f665d" },
+];
+
 const checkoutArrangements = [
   [180, "T20 / T20 / T20"],
   [170, "T20 / T20 / BULL"],
@@ -64,6 +85,7 @@ const state = {
   highlight: null,
   highlightStartedAt: 0,
   stats: JSON.parse(localStorage.getItem("dartsCheckoutStats") || '{"attempts":0,"correct":0}'),
+  boardColors: loadBoardColors(),
 };
 
 const els = {
@@ -159,6 +181,54 @@ function recommendedRoute(target) {
   return "アレンジが見つかりません";
 }
 
+function loadBoardColors() {
+  try {
+    return {
+      ...defaultBoardColors,
+      ...JSON.parse(localStorage.getItem("dartsCheckoutBoardColors") || "{}"),
+    };
+  } catch {
+    return { ...defaultBoardColors };
+  }
+}
+
+function saveBoardColors() {
+  localStorage.setItem("dartsCheckoutBoardColors", JSON.stringify(state.boardColors));
+}
+
+function isDefaultBoardColors() {
+  return Object.entries(defaultBoardColors).every(([key, color]) => state.boardColors[key] === color);
+}
+
+function boardColorPicker(target, label) {
+  const selectedColor = state.boardColors[target];
+  const options = boardColorOptions
+    .map((option) => (
+      `<button class="color-swatch ${selectedColor === option.color ? "selected" : ""}" ` +
+      `type="button" data-color-target="${target}" data-color="${option.color}" ` +
+      `aria-label="${label}を${option.label}に変更" title="${option.label}" ` +
+      `style="--swatch:${option.color}"></button>`
+    ))
+    .join("");
+
+  return `<section class="color-picker" data-color-picker="${target}">
+    <div class="color-picker-header">
+      <span class="color-current" style="--swatch:${selectedColor}" aria-hidden="true"></span>
+      <strong>${label}</strong>
+    </div>
+    <div class="color-palette">${options}</div>
+  </section>`;
+}
+
+function boardColorSettingsHtml() {
+  return `<div class="color-settings">
+    ${boardColorPicker("lightSegment", "シングル白エリア")}
+    ${boardColorPicker("ringPrimary", "リングカラー 1")}
+    ${boardColorPicker("ringSecondary", "リングカラー 2")}
+    <button id="resetBoardColorsButton" class="secondary" type="button" ${isDefaultBoardColors() ? "disabled" : ""}>標準カラーに戻す</button>
+  </div>`;
+}
+
 function render() {
   const total = state.throws.reduce((sum, item) => sum + item.points, 0);
   const remaining = state.target - total;
@@ -217,15 +287,15 @@ function drawBoard() {
   boardNumbers.forEach((_, index) => {
     const start = index * 18 - 99;
     const dark = index % 2 === 0;
-    ringSector(center, scoringRadius * 0.12, scoringRadius * 0.49, start, 18, dark ? "#1f1e1a" : "#f1ddc7");
-    ringSector(center, scoringRadius * 0.50, scoringRadius * 0.58, start, 18, dark ? "#1d8b4c" : "#c73b32");
-    ringSector(center, scoringRadius * 0.59, scoringRadius * 0.85, start, 18, dark ? "#1f1e1a" : "#f1ddc7");
-    ringSector(center, scoringRadius * 0.86, scoringRadius * 0.98, start, 18, dark ? "#1d8b4c" : "#c73b32");
+    ringSector(center, scoringRadius * 0.12, scoringRadius * 0.49, start, 18, dark ? "#1f1e1a" : state.boardColors.lightSegment);
+    ringSector(center, scoringRadius * 0.50, scoringRadius * 0.58, start, 18, dark ? state.boardColors.ringPrimary : state.boardColors.ringSecondary);
+    ringSector(center, scoringRadius * 0.59, scoringRadius * 0.85, start, 18, dark ? "#1f1e1a" : state.boardColors.lightSegment);
+    ringSector(center, scoringRadius * 0.86, scoringRadius * 0.98, start, 18, dark ? state.boardColors.ringPrimary : state.boardColors.ringSecondary);
   });
 
-  ctx.fillStyle = "#1d8b4c";
+  ctx.fillStyle = state.boardColors.ringPrimary;
   circle(center, scoringRadius * 0.11);
-  ctx.fillStyle = "#c73b32";
+  ctx.fillStyle = state.boardColors.ringSecondary;
   circle(center, scoringRadius * 0.05);
 
   drawHighlight(center, scoringRadius);
@@ -358,6 +428,10 @@ function openDialog(type) {
         .map(([key, item]) => `<button class="option-button ${state.difficulty === key ? "selected" : ""}" data-difficulty="${key}" type="button">${item.label}</button>`)
         .join("")}</div>`,
     ],
+    boardColors: [
+      "盤面カラー設定",
+      boardColorSettingsHtml(),
+    ],
     stats: [
       "成績",
       `<div class="stat-card"><strong>挑戦数</strong><span>${state.stats.attempts}</span></div>
@@ -377,7 +451,9 @@ function openDialog(type) {
 
   els.dialogTitle.textContent = content[0];
   els.dialogContent.innerHTML = content[1];
-  els.dialog.showModal();
+  if (!els.dialog.open) {
+    els.dialog.showModal();
+  }
 }
 
 els.canvas.addEventListener("click", (event) => {
@@ -432,6 +508,22 @@ els.dialogContent.addEventListener("click", (event) => {
     localStorage.setItem("dartsCheckoutStats", JSON.stringify(state.stats));
     els.dialog.close();
     render();
+  }
+
+  const colorButton = event.target.closest("[data-color-target][data-color]");
+  if (colorButton) {
+    const target = colorButton.dataset.colorTarget;
+    state.boardColors[target] = colorButton.dataset.color;
+    saveBoardColors();
+    drawBoard();
+    openDialog("boardColors");
+  }
+
+  if (event.target.id === "resetBoardColorsButton") {
+    state.boardColors = { ...defaultBoardColors };
+    saveBoardColors();
+    drawBoard();
+    openDialog("boardColors");
   }
 });
 

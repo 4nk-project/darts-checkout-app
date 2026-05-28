@@ -39,10 +39,10 @@ com.example.dartscheckout.app-core-runtime-2.2.0-37 /Users/4nk/.gradle/caches/9.
 com.example.dartscheckout.app-lifecycle-runtime-ktx-release-38 /Users/4nk/.gradle/caches/9.0.0/transforms/f91f3dc6251b388f8ee7a55b42ff4499/transformed/lifecycle-runtime-ktx-release/res
 com.example.dartscheckout.app-lifecycle-viewmodel-savedstate-2.8.3-39 /Users/4nk/.gradle/caches/9.0.0/transforms/fd6ef67525afc6b3080c07307a808bde/transformed/lifecycle-viewmodel-savedstate-2.8.3/res
 com.example.dartscheckout.app-lifecycle-runtime-release-40 /Users/4nk/.gradle/caches/9.0.0/transforms/fd7ee7f02081d2439a6f8f1cfd4fe5a2/transformed/lifecycle-runtime-release/res
-com.example.dartscheckout.app-pngs-41 /Users/4nk/Documents/darts-checkout/app/build/generated/res/pngs/debug
-com.example.dartscheckout.app-resValues-42 /Users/4nk/Documents/darts-checkout/app/build/generated/res/resValues/debug
-com.example.dartscheckout.app-packageDebugResources-43 /Users/4nk/Documents/darts-checkout/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
-com.example.dartscheckout.app-packageDebugResources-44 /Users/4nk/Documents/darts-checkout/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
-com.example.dartscheckout.app-debug-45 /Users/4nk/Documents/darts-checkout/app/build/intermediates/merged_res/debug/mergeDebugResources
-com.example.dartscheckout.app-debug-46 /Users/4nk/Documents/darts-checkout/app/src/debug/res
-com.example.dartscheckout.app-main-47 /Users/4nk/Documents/darts-checkout/app/src/main/res
+com.example.dartscheckout.app-pngs-41 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/generated/res/pngs/debug
+com.example.dartscheckout.app-resValues-42 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/generated/res/resValues/debug
+com.example.dartscheckout.app-packageDebugResources-43 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.example.dartscheckout.app-packageDebugResources-44 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.example.dartscheckout.app-debug-45 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.example.dartscheckout.app-debug-46 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/src/debug/res
+com.example.dartscheckout.app-main-47 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/src/main/res
