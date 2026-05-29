@@ -34,7 +34,7 @@ a {
   height: 100svh;
   padding: max(20px, env(safe-area-inset-top)) clamp(12px, 3vw, 24px) max(12px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: clamp(8px, 1.4svh, 14px);
   position: relative;
   overflow: hidden;
@@ -103,6 +103,29 @@ a {
 .menu button:active,
 .menu a:active {
   background: var(--bg);
+}
+
+.quick-actions {
+  width: min(100%, 390px);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.quick-actions button {
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.quick-actions button:active {
+  background: var(--disabled);
 }
 
 .score-panel {
@@ -343,12 +366,18 @@ dialog::backdrop {
 @media (min-width: 860px) and (orientation: landscape) {
   .app {
     grid-template-columns: minmax(280px, 360px) 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     column-gap: clamp(18px, 4vw, 56px);
   }
 
   .topbar {
     grid-column: 1 / -1;
+  }
+
+  .quick-actions {
+    width: 100%;
+    margin-inline: 0;
+    grid-column: 1;
   }
 
   .score-panel {
@@ -358,7 +387,7 @@ dialog::backdrop {
   }
 
   .board-panel {
-    grid-row: 2;
+    grid-row: 2 / -1;
     grid-column: 2;
   }
 
