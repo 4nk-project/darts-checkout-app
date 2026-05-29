@@ -1,8 +1,0 @@
-{
-  "versionCode": 1,
-  "versionName": "1.0",
-  "apkUrl": "https://github.com/4nk-project/darts-checkout-app/releases/latest/download/app-release.apk",
-  "releaseNotesUrl": "https://github.com/4nk-project/darts-checkout-app/releases/latest",
-  "message": "新しいバージョンがあります。最新版をダウンロードしてアップデートしてください。",
-  "forceUpdate": false
-}

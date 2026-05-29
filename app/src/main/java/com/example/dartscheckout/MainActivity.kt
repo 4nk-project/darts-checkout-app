@@ -2,7 +2,6 @@ package com.example.dartscheckout
 
 import android.content.Context
 import android.graphics.Paint
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
@@ -160,13 +159,22 @@ private data class PracticeStats(
 }
 
 private data class AppUpdateInfo(
-    val versionCode: Long,
     val versionName: String,
     val apkUrl: String,
     val releaseNotesUrl: String?,
     val message: String,
     val forceUpdate: Boolean,
 )
+
+private data class AppVersion(
+    val major: Int,
+    val minor: Int,
+    val patch: Int,
+) : Comparable<AppVersion> {
+    override fun compareTo(other: AppVersion): Int {
+        return compareValuesBy(this, other, AppVersion::major, AppVersion::minor, AppVersion::patch)
+    }
+}
 
 private data class BoardColors(
     val lightSegment: Color,
@@ -236,7 +244,8 @@ private val finishableScores: List<Int> = (2..180).filter { target ->
 }
 
 private const val contactMailUri = "mailto:contact@ankoromoti.com?subject=Darts%20Checkout%20Feedback"
-private const val updateInfoUrl = "https://github.com/4nk-project/darts-checkout-app/releases/latest/download/latest.json"
+private const val latestReleaseApiUrl = "https://api.github.com/repos/4nk-project/darts-checkout-app/releases/latest"
+private const val releaseApkAssetName = "app-release.apk"
 private const val preferencesName = "darts_checkout_preferences"
 private const val lightSegmentColorKey = "board_light_segment_color"
 private const val ringPrimaryColorKey = "board_ring_primary_color"
@@ -318,40 +327,74 @@ private fun saveBoardColors(context: Context, boardColors: BoardColors) {
 
 private suspend fun checkForAppUpdate(context: Context): AppUpdateInfo? = withContext(Dispatchers.IO) {
     runCatching {
-        val connection = (URL(updateInfoUrl).openConnection() as HttpURLConnection).apply {
+        val connection = (URL(latestReleaseApiUrl).openConnection() as HttpURLConnection).apply {
             connectTimeout = 5000
             readTimeout = 5000
             requestMethod = "GET"
+            setRequestProperty("Accept", "application/vnd.github+json")
+            setRequestProperty("User-Agent", "DartsCheckoutApp")
         }
         try {
             if (connection.responseCode !in 200..299) return@runCatching null
 
             val response = connection.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(response)
+            val latestVersionName = json.getString("tag_name").removePrefix("v")
+            val latestVersion = parseAppVersion(latestVersionName) ?: return@runCatching null
+            val currentVersion = parseAppVersion(currentAppVersionName(context)) ?: return@runCatching null
+            if (latestVersion <= currentVersion) return@runCatching null
+
+            val apkUrl = findReleaseApkUrl(json) ?: return@runCatching null
+            val releaseBody = json.optString("body").trim()
             val updateInfo = AppUpdateInfo(
-                versionCode = json.getLong("versionCode"),
-                versionName = json.optString("versionName", ""),
-                apkUrl = json.getString("apkUrl"),
-                releaseNotesUrl = json.optString("releaseNotesUrl").takeIf { it.isNotBlank() },
-                message = json.optString("message", "新しいバージョンがあります。"),
-                forceUpdate = json.optBoolean("forceUpdate", false),
+                versionName = latestVersionName,
+                apkUrl = apkUrl,
+                releaseNotesUrl = json.optString("html_url").takeIf { it.isNotBlank() },
+                message = releaseBody.ifBlank {
+                    "新しいバージョンがあります。最新版をダウンロードしてアップデートしてください。"
+                },
+                forceUpdate = false,
             )
 
-            updateInfo.takeIf { it.versionCode > currentAppVersionCode(context) }
+            updateInfo
         } finally {
             connection.disconnect()
         }
     }.getOrNull()
 }
 
-private fun currentAppVersionCode(context: Context): Long {
+private fun currentAppVersionName(context: Context): String {
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        packageInfo.longVersionCode
-    } else {
-        @Suppress("DEPRECATION")
-        packageInfo.versionCode.toLong()
+    return packageInfo.versionName.orEmpty()
+}
+
+private fun parseAppVersion(versionName: String): AppVersion? {
+    val parts = versionName.removePrefix("v").split(".")
+    if (parts.isEmpty() || parts.size > 3) return null
+
+    val numbers = parts.map { it.toIntOrNull() ?: return null }
+    return AppVersion(
+        major = numbers.getOrElse(0) { 0 },
+        minor = numbers.getOrElse(1) { 0 },
+        patch = numbers.getOrElse(2) { 0 },
+    )
+}
+
+private fun findReleaseApkUrl(releaseJson: JSONObject): String? {
+    val assets = releaseJson.optJSONArray("assets") ?: return null
+    var fallbackApkUrl: String? = null
+
+    for (index in 0 until assets.length()) {
+        val asset = assets.optJSONObject(index) ?: continue
+        val name = asset.optString("name")
+        val url = asset.optString("browser_download_url")
+        if (name == releaseApkAssetName && url.isNotBlank()) return url
+        if (fallbackApkUrl == null && name.endsWith(".apk") && url.isNotBlank()) {
+            fallbackApkUrl = url
+        }
     }
+
+    return fallbackApkUrl
 }
 
 @Composable
