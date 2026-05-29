@@ -104,6 +104,7 @@ const els = {
   nextButton: document.querySelector("#nextButton"),
   menuButton: document.querySelector("#menuButton"),
   menu: document.querySelector("#menu"),
+  quickActions: document.querySelector(".quick-actions"),
   dialog: document.querySelector("#dialog"),
   dialogTitle: document.querySelector("#dialogTitle"),
   dialogContent: document.querySelector("#dialogContent"),
@@ -487,6 +488,13 @@ els.menuButton.addEventListener("click", () => {
 });
 
 els.menu.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-dialog]");
+  if (!button) return;
+  els.menu.hidden = true;
+  openDialog(button.dataset.dialog);
+});
+
+els.quickActions.addEventListener("click", (event) => {
   const button = event.target.closest("[data-dialog]");
   if (!button) return;
   els.menu.hidden = true;

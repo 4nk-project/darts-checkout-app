@@ -421,22 +421,6 @@ private fun CheckoutPracticeScreen() {
                     menuExpanded = false
                     activeDialog = MenuDialog.About
                 },
-                onCheckoutTable = {
-                    menuExpanded = false
-                    activeDialog = MenuDialog.CheckoutTable
-                },
-                onDifficulty = {
-                    menuExpanded = false
-                    activeDialog = MenuDialog.Difficulty
-                },
-                onBoardColors = {
-                    menuExpanded = false
-                    activeDialog = MenuDialog.BoardColors
-                },
-                onStats = {
-                    menuExpanded = false
-                    activeDialog = MenuDialog.Stats
-                },
                 onPrivacy = {
                     menuExpanded = false
                     activeDialog = MenuDialog.Privacy
@@ -450,7 +434,15 @@ private fun CheckoutPracticeScreen() {
                     uriHandler.openUri(contactMailUri)
                 },
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            QuickActionBar(
+                onDifficulty = { activeDialog = MenuDialog.Difficulty },
+                onBoardColors = { activeDialog = MenuDialog.BoardColors },
+                onCheckoutTable = { activeDialog = MenuDialog.CheckoutTable },
+                onStats = { activeDialog = MenuDialog.Stats },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             CheckoutPanel(
                 target = target,
                 remaining = remaining,
@@ -598,10 +590,6 @@ private fun AppTopBar(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     onAbout: () -> Unit,
-    onCheckoutTable: () -> Unit,
-    onDifficulty: () -> Unit,
-    onBoardColors: () -> Unit,
-    onStats: () -> Unit,
     onPrivacy: () -> Unit,
     onLicenses: () -> Unit,
     onContact: () -> Unit,
@@ -634,22 +622,6 @@ private fun AppTopBar(
                     onClick = onAbout,
                 )
                 DropdownMenuItem(
-                    text = { Text("ダーツのアレンジ表") },
-                    onClick = onCheckoutTable,
-                )
-                DropdownMenuItem(
-                    text = { Text("難易度を選択") },
-                    onClick = onDifficulty,
-                )
-                DropdownMenuItem(
-                    text = { Text("盤面カラー設定") },
-                    onClick = onBoardColors,
-                )
-                DropdownMenuItem(
-                    text = { Text("成績を見る") },
-                    onClick = onStats,
-                )
-                DropdownMenuItem(
                     text = { Text("プライバシー") },
                     onClick = onPrivacy,
                 )
@@ -672,6 +644,63 @@ private fun AppTopBar(
             color = Color(0xFF51483F),
         )
         Spacer(modifier = Modifier.size(40.dp))
+    }
+}
+
+@Composable
+private fun QuickActionBar(
+    onDifficulty: () -> Unit,
+    onBoardColors: () -> Unit,
+    onCheckoutTable: () -> Unit,
+    onStats: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        QuickActionButton(
+            text = "難易度",
+            modifier = Modifier.weight(1f),
+            onClick = onDifficulty,
+        )
+        QuickActionButton(
+            text = "カラー",
+            modifier = Modifier.weight(1f),
+            onClick = onBoardColors,
+        )
+        QuickActionButton(
+            text = "アレンジ",
+            modifier = Modifier.weight(1f),
+            onClick = onCheckoutTable,
+        )
+        QuickActionButton(
+            text = "成績",
+            modifier = Modifier.weight(1f),
+            onClick = onStats,
+        )
+    }
+}
+
+@Composable
+private fun QuickActionButton(
+    text: String,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .height(40.dp)
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF18201B),
+        )
     }
 }
 
