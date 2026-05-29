@@ -16,5 +16,7 @@ local.properties
 *.apk
 *.aab
 
-# release output directory
+# Release output directories
 release/
+relese/
+app/release/

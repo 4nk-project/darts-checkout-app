@@ -1,4 +1,0 @@
-com.example.dartscheckout.test.app-androidTest-0 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/generated/res/resValues/androidTest/debug
-com.example.dartscheckout.test.app-mergeDebugAndroidTestResources-1 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
-com.example.dartscheckout.test.app-mergeDebugAndroidTestResources-2 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
-com.example.dartscheckout.test.app-debugAndroidTest-3 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources
