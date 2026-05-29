@@ -11,3 +11,10 @@ local.properties
 # IDE
 .idea/
 .kotlin/
+
+# Android build artifacts
+*.apk
+*.aab
+
+# release output directory
+release/

@@ -36,10 +36,10 @@ com.example.dartscheckout.app-core-runtime-2.2.0-34 /Users/4nk/.gradle/caches/9.
 com.example.dartscheckout.app-lifecycle-runtime-ktx-release-35 /Users/4nk/.gradle/caches/9.0.0/transforms/f91f3dc6251b388f8ee7a55b42ff4499/transformed/lifecycle-runtime-ktx-release/res
 com.example.dartscheckout.app-lifecycle-viewmodel-savedstate-2.8.3-36 /Users/4nk/.gradle/caches/9.0.0/transforms/fd6ef67525afc6b3080c07307a808bde/transformed/lifecycle-viewmodel-savedstate-2.8.3/res
 com.example.dartscheckout.app-lifecycle-runtime-release-37 /Users/4nk/.gradle/caches/9.0.0/transforms/fd7ee7f02081d2439a6f8f1cfd4fe5a2/transformed/lifecycle-runtime-release/res
-com.example.dartscheckout.app-pngs-38 /Users/4nk/Documents/darts-checkout/app/build/generated/res/pngs/release
-com.example.dartscheckout.app-resValues-39 /Users/4nk/Documents/darts-checkout/app/build/generated/res/resValues/release
-com.example.dartscheckout.app-packageReleaseResources-40 /Users/4nk/Documents/darts-checkout/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
-com.example.dartscheckout.app-packageReleaseResources-41 /Users/4nk/Documents/darts-checkout/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
-com.example.dartscheckout.app-release-42 /Users/4nk/Documents/darts-checkout/app/build/intermediates/merged_res/release/mergeReleaseResources
-com.example.dartscheckout.app-main-43 /Users/4nk/Documents/darts-checkout/app/src/main/res
-com.example.dartscheckout.app-release-44 /Users/4nk/Documents/darts-checkout/app/src/release/res
+com.example.dartscheckout.app-pngs-38 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/generated/res/pngs/release
+com.example.dartscheckout.app-resValues-39 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/generated/res/resValues/release
+com.example.dartscheckout.app-packageReleaseResources-40 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+com.example.dartscheckout.app-packageReleaseResources-41 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+com.example.dartscheckout.app-release-42 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/build/intermediates/merged_res/release/mergeReleaseResources
+com.example.dartscheckout.app-main-43 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/src/main/res
+com.example.dartscheckout.app-release-44 /Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app/src/release/res
