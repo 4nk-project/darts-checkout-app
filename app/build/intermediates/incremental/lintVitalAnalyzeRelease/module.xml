@@ -1,6 +1,6 @@
 <lint-module
     format="1"
-    dir="/Users/4nk/Documents/darts-checkout/app"
+    dir="/Users/4nk/Documents/2026/github/4nkproject/darts-checkout-app/app"
     name=":app"
     type="APP"
     maven="DartsCheckout:app:unspecified"
